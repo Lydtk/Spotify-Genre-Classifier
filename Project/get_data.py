@@ -69,5 +69,5 @@ df_r["genre"] = "Rock"
 
 df_combined = pd.concat([df_hh, df_c, df_r])
 
-df_combined.to_csv(r'data\song_data.csv', index = False)
+df_combined.to_csv(r'song_data.csv', index = False)
 
