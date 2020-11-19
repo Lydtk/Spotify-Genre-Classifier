@@ -17,9 +17,11 @@ url='https://accounts.spotify.com/api/token'
 response = requests.post(url, data=body_params, auth = (CLIENT_ID, CLIENT_SECRET))
 
 token = response.json()["access_token"]
-pprint(token)
 
 headers = {'Authorization': 'Bearer '+ token}
+
+# [hip-hop, classical, rock]    
+playlists = ["37i9dQZF1DX48TTZL62Yht", "37i9dQZF1DWWEJlAGA9gs0", "37i9dQZF1DWXRqgorJj26U"]
 
 # get hip-hop songs + extract track id's 
 r = requests.get("https://api.spotify.com/v1/playlists/37i9dQZF1DX48TTZL62Yht/tracks", headers=headers)
@@ -43,4 +45,29 @@ for song in r_songs["items"]:
     r_ids.append(song['track']['id'])
 
 ## get features for individual tracks, leverage spotify multi-track request
-#hh_ids = hh_ids.join()
+hh_ids = ",".join(hh_ids)
+c_ids = ",".join(c_ids)
+r_ids = ",".join(r_ids)
+ 
+r = requests.get(f"https://api.spotify.com/v1/audio-features/?ids={hh_ids}", headers=headers)
+features = r.json()
+
+df_hh = pd.DataFrame(features["audio_features"])
+df_hh["genre"] = "Hip-Hop"
+
+r = requests.get(f"https://api.spotify.com/v1/audio-features/?ids={c_ids}", headers=headers)
+features = r.json()
+
+df_c = pd.DataFrame(features["audio_features"])
+df_c["genre"] = "Classical"
+
+r = requests.get(f"https://api.spotify.com/v1/audio-features/?ids={r_ids}", headers=headers)
+features = r.json()
+
+df_r = pd.DataFrame(features["audio_features"])
+df_r["genre"] = "Rock"
+
+df_combined = pd.concat([df_hh, df_c, df_r])
+
+df_combined.to_csv(r'data\song_data.csv', index = False)
+
