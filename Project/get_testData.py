@@ -21,7 +21,7 @@ if __name__ == '__main__':
     headers = {'Authorization': 'Bearer '+ token}
 
     # get classical songs + extract track id's 
-    r = requests.get("https://api.spotify.com/v1/playlists/37i9dQZF1DX48TTZL62Yht/tracks", headers=headers)
+    r = requests.get("https://api.spotify.com/v1/playlists/37i9dQZF1DWY6tYEFs22tT/tracks", headers=headers)
     c_songs = r.json()
     c_ids = []
     for song in c_songs["items"]:
@@ -34,4 +34,4 @@ if __name__ == '__main__':
 
     df_c = pd.DataFrame(features["audio_features"])
     df_c["genre"] = "Hip-Hop"
-    df_c.to_csv(r'data/rock_test.csv', index = False)
+    df_c.to_csv(r'data/hh.csv', index = False)
