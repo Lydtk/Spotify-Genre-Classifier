@@ -19,7 +19,7 @@ def cross_val_C():
             x_train, x_test = X.iloc[train_idx], X.iloc[test_idx]
             y_test = y[test_idx]
             y_train = y[train_idx]
-            lm = linear_model.LogisticRegression(multi_class='ovr', solver='liblinear', C=C)
+            lm = linear_model.LogisticRegression(multi_class='ovr', solver='liblinear', C=C, penalty="l1")
             lm.fit(x_train, y_train)
             y_pred = lm.predict(x_test)
             tmp.append(f1_score(y_test, y_pred, average="micro"))
@@ -32,8 +32,9 @@ def cross_val_C():
 
 def cf_matrix():
     X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y, test_size= 0.2)
-    lm = linear_model.LogisticRegression(multi_class='ovr', solver='liblinear')
+    lm = linear_model.LogisticRegression(multi_class='ovr', solver='liblinear', penalty="l1", C=0.4)
     lm.fit(X_train, y_train)
+    print(lm.coef_)
     y_pred = lm.decision_function(X_test)
     fig, ax = plt.subplots(figsize=(10, 6))
     ax.set_title('Confusion Matrix')
@@ -44,7 +45,7 @@ def cf_matrix():
     plt.show()
 
 def plot_multiclass_roc(n_classes, figsize=(17, 6)):
-    clf = linear_model.LogisticRegression(multi_class='ovr', solver='liblinear')
+    clf = linear_model.LogisticRegression(multi_class='ovr', solver='liblinear', penalty="l1", C=0.4)
     X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y, test_size= 0.2)
     clf.fit(X_train, y_train)
     y_score = clf.decision_function(X_test)
@@ -80,11 +81,12 @@ with open("data/train_shuffled_all.csv", "r") as f:
     reader = csv.reader(f)
     columns = next(reader)
 
-exclude = ["analysis_url", "id", "track_href", "type", "uri", "duration_ms", "tempo", "time_signature", "mode", "liveness", "key"]
+#exclude = ["analysis_url", "id", "track_href", "type", "uri", "duration_ms", "tempo", "time_signature", "mode", "liveness", "key"]
+exclude = ["analysis_url", "id", "track_href", "type", "uri"]
 columns = [e for e in columns if e not in exclude]
 
 data = pd.read_csv("data/train_shuffled_all.csv", usecols=columns)
-
+    
 # transform categorical target variable to int
 le = LabelEncoder()
 le.fit(data.genre)
@@ -98,8 +100,20 @@ scaler = StandardScaler()
 scaled_data = scaler.fit_transform(X)
 
 scaled_df = pd.DataFrame(X, columns=X.columns)
-# plot_multiclass_roc(n_classes=["hiphop", "rock", "classical"], figsize=(16, 10))
-#cf_matrix()
 
-#cross_val_C()
+plot_multiclass_roc(n_classes=["hiphop", "rock", "classical"], figsize=(16, 10))
+cf_matrix()
+cross_val_C()
+
+# clf = linear_model.LogisticRegression(multi_class='ovr', solver='liblinear', penalty="l1", C=0.4)
+# X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y, test_size= 0.2)
+# clf.fit(X, y)
+
+# df_test = pd.read_csv("data/tests/hh_test.csv", usecols=columns)
+# df_test["genre"] = 0
+# X_new = data.iloc[:,df_test.columns != "genre"]
+# y_score = clf.predict(X_new)
+# y_true = [0] * len(y_score)
+# print(metrics.accuracy_score(y_true, y_score))
+
 
