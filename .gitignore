@@ -3,6 +3,10 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+url.txt
+SVM_clf.py
+hip-hop.csv
+svm2.py
 # credentials
 credentials.json
 # C extensions
