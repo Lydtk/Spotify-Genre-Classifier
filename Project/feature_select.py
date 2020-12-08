@@ -12,7 +12,7 @@ with open("data/song_data_train.csv", "r") as f:
 exclude = ["analysis_url", "id", "track_href", "type", "uri"]
 columns = [e for e in columns if e not in exclude]
 
-data = pd.read_csv("data/train_shuffled.csv", usecols=columns)
+data = pd.read_csv("data/train_shuffled_all.csv", usecols=columns)
 # transform categorical target variable to int
 le = LabelEncoder()
 le.fit(data.genre)

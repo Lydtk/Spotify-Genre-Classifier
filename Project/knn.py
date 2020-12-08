@@ -109,7 +109,6 @@ def plot_multiclass_roc(n_classes, figsize=(17, 6)):
     sns.despine()
     plt.show()
 
-
 with open("data/train_shuffled_all.csv", "r") as f:
     reader = csv.reader(f)
     columns = next(reader)
@@ -136,10 +135,10 @@ scaled_df = pd.DataFrame(X, columns=X.columns)
 X = scaled_df.iloc[:,data.columns != "genre"]  # independent feature columns
 
 # cross val to find k -number of neighbours
-# find_k(X, y)
+find_k(X, y)
 
-# plot_multiclass_roc(n_classes=["classical", "hiphop", "rock"], figsize=(16, 10))
-# cf_matrix()
-# compare_train_test()
+plot_multiclass_roc(n_classes=["classical", "hiphop", "rock"], figsize=(16, 10))
+cf_matrix()
+compare_train_test()
 
 
