@@ -44,7 +44,7 @@ def cf_matrix():
     fig, ax = plt.subplots(figsize=(10, 6))
     ax.set_title('Confusion Matrix')
     metrics.plot_confusion_matrix(lm, X_test, y_test, ax = ax)
-    target_names = ["Hip-Hop", "Rock", "Classical"]
+    target_names = ["Classical", "Hip-Hop", "Rock"]
     y_pred = np.argmax(y_pred, axis=1)
     print(classification_report(y_test, y_pred, target_names=target_names))
     plt.show()
@@ -89,13 +89,15 @@ with open("data/train_shuffled_all.csv", "r") as f:
 exclude = ["analysis_url", "id", "track_href", "type", "uri", "duration_ms", "tempo", "time_signature", "mode", "liveness", "key"]
 #exclude = ["analysis_url", "id", "track_href", "type", "uri"]
 columns = [e for e in columns if e not in exclude]
+include = ["acousticness", "energy", "instrumentalness", "loudness", "valence", "danceability", "genre"]
 
-data = pd.read_csv("data/train_shuffled_all.csv", usecols=columns)
-    
+data = pd.read_csv("data/train_shuffled_all.csv", usecols=include)
+print(data["genre"].value_counts())
 # transform categorical target variable to int
 le = LabelEncoder()
 le.fit(data.genre)
 data["genre"] = le.transform(data.genre)
+#print(data.genre)
 # ["hiphop", "rock", "classical"] = [1, 2, 0]
 
 X = data.iloc[:,data.columns != "genre"]  # independent feature columns
@@ -105,20 +107,20 @@ scaler = StandardScaler()
 scaled_data = scaler.fit_transform(X)
 
 scaled_df = pd.DataFrame(X, columns=X.columns)
-print(data["genre"].value_counts())
+X = scaled_df.iloc[:,data.columns != "genre"]  # independent feature columns
 
-plot_multiclass_roc(n_classes=["hiphop", "rock", "classical"], figsize=(16, 10))
-cf_matrix()
+# plot_multiclass_roc(n_classes=["classical", "hiphop", "rock"], figsize=(16, 10))
+# cf_matrix()
 cross_val_C()
 
-clf = linear_model.LogisticRegression(multi_class='ovr', solver='liblinear', penalty="l1", C=0.4)
-X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y, test_size= 0.2)
-clf.fit(X, y)
+# clf = linear_model.LogisticRegression(multi_class='ovr', solver='liblinear', penalty="l1", C=0.4)
+# X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y, test_size= 0.2)
+# clf.fit(X, y)
 
-# df_test = pd.read_csv("data/tests/rock_test.csv", usecols=columns)
+# df_test = pd.read_csv("data/tests/rock_test.csv", usecols=include)
 # X_new = data.iloc[:,df_test.columns != "genre"]
 # y_score = clf.predict(X_new)
-# y_true = [0] * len(y_score)
+# y_true = [2] * len(y_score)
 # print(metrics.accuracy_score(y_true, y_score))
 
 

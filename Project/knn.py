@@ -2,186 +2,144 @@ import pandas as pd
 import numpy as np 
 import matplotlib.pyplot as plt
 import seaborn as sns
-from sklearn.model_selection import KFold
-from sklearn.metrics import mean_squared_error
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, GridSearchCV, KFold
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.dummy import DummyClassifier
-from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
+from sklearn.metrics import f1_score, accuracy_score
 from sklearn.metrics import classification_report
-from sklearn.metrics import confusion_matrix
-from sklearn.metrics import roc_curve,auc
-from sklearn.multiclass import OneVsRestClassifier
-from sklearn.preprocessing import label_binarize
+from sklearn.metrics import confusion_matrix, plot_confusion_matrix
+from sklearn.metrics import roc_curve, auc
+from sklearn.preprocessing import LabelEncoder, StandardScaler
+import csv
 
-def main():
-    #Reading in Dataset 
-    dataframe = pd.read_csv('data/train_shuffled_all.csv' , usecols = ['acousticness','danceability','duration_ms','energy','instrumentalness','key','liveness','loudness','mode','speechiness','tempo','time_signature','valence','genre'])
-    
-    #To plot data for 2 features
-    # data_pl = {'Dancebility': X1, 'energy': X2, 'Genre': y}
-    # sns.scatterplot(x='Dancebility', y='energy', hue='Genre',data=pd.DataFrame(data_pl), palette='dark')
-    # plt.title("Plot of the Data")
-    # plt.show()
+from sklearn.utils.validation import check_random_state
 
-     #Replacing text outputs with numbers
-    dataframe.replace(to_replace ="Rock",  
-                 value = -1,  
-                  inplace = True) 
-    dataframe.replace(to_replace ="Hip-Hop",  
-                    value = 0,  
-                    inplace = True) 
-    dataframe.replace(to_replace ="Classical",  
-                    value = 1,  
-                    inplace = True) 
-    dataframe.to_csv('output.csv',  
-                 index = False)
-    #new csv
-    data= pd.read_csv('output.csv' , usecols = ['acousticness','danceability','duration_ms','energy','instrumentalness','key','liveness','loudness','mode','speechiness','tempo','time_signature','valence','genre'])
-    print(data.head())
-
-    #features
-    XAcst= data.iloc[:,0]
-    XDnce = data.iloc[:,1]
-    XDur = data.iloc[:,2]
-    XEnrg = data.iloc[:,3]
-    XInst = data.iloc[:,4]
-    XKey = data.iloc[:,5]
-    XLive = data.iloc[:,6]
-    XLoud= data.iloc[:,7]
-    XMode = data.iloc[:,8]
-    XSpeech = data.iloc[:,9]
-    XTmpo = data.iloc[:,10]
-    XTimSig = data.iloc[:,11]
-    XVal = data.iloc[:,12]
-
-    #output (-1,0,1)
-    y = data.iloc[:,13]
-    #features
-    X = np.column_stack((XAcst,XDnce,XDur,XEnrg,XInst,XKey, XLive ,XLoud, XMode, XSpeech, XTmpo, XTimSig, XVal))
-    
-
-    #cross val to find k -number of neighbours
-    find_k(X,y)
-
-    roc_curves(X,y,32)
-   
-
-#t
 def find_k(X,y):
-
     kf = KFold(n_splits=5)
     f1Scores = []
+    k_range = list(range(1, 31))     #for cross-val
+    # k_range = [9]                        #after choosing best k
 
-    ydummy = baseline(X,y)               #predict baseline
-    k_range = [1,10,25,30,32,35,50]     #for cross-val
-    # k_range = [32]                        #after choosing best k
+    # for k in k_range:
+    #     model =  KNeighborsClassifier(n_neighbors = k) #passing in different number of neighbours
+    #     temp = []
+    #     for train, test in kf.split(X):       #different combinations of splitting test/train according to k folds
+    #         model.fit(X[train], y[train])
+    #         ypred = model.predict(X[test])     #predicted y according to model
+    #         temp.append(f1_score(y[test], ypred, average='micro'))
 
-    for k in k_range:
+    #     f1Scores.append(np.array(temp).mean())  
 
-        model =  KNeighborsClassifier(n_neighbors = k, weights='uniform') #passing in different number of neighbours
-        temp = []
-        for train, test in kf.split(X):       #different combinations of splitting test/train according to k folds
-            model.fit(X[train], y[train])
-            ypred = model.predict(X[test])     #predicted y according to model
-            temp.append(f1_score(y[test], ypred, average='macro'))
-
-        #arrays for plotting
-        f1Scores.append(np.array(temp).mean())     #add to array of f1 scores
-        print("k:" ,k, "score: ",f1Scores)
-        ypred = model.predict(X)
-
-    #Plotting confusion matric + classif. report *** separate into func later.
-    print("KNN:\n",confusion_matrix(y, ypred))
-    print(classification_report(y, ypred,target_names=['Hip-Hop', 'Classical', 'Rock']))
-    print("Dummy Classifier:\n",confusion_matrix(y, ydummy))
-    print(classification_report(y, ydummy,target_names=['Hip-Hop', 'Classical', 'Rock']))
-
-    #Plotting predicted results vs real results
-    print("Max Score",max(f1Scores))       # finding highest f1-best precision
-    plt.plot(k_range, f1Scores, linewidth=2)   #score bar
-    plt.xlabel('Number of Neighbours')
-    plt.ylabel('F1 score')
-    plt.title("f1 score at different K values ")
-    plt.show()
+    knn = KNeighborsClassifier()
+    param_grid = dict(n_neighbors=k_range)
+    param_grid["weights"] = ["uniform", "distance"]
+    grid = GridSearchCV(knn, param_grid, cv=10, scoring='accuracy')
+    grid.fit(X, y)
+    # Dictionary containing the parameters (k) used to generate that score
+    print(grid.best_params_)
+    print(grid.best_estimator_)
+    # print("Max Score",max(f1Scores))       # finding highest f1-best precision
+    # plt.plot(k_range, f1Scores, linewidth=2)   #score bar
+    # plt.xlabel('Number of Neighbours')
+    # plt.ylabel('F1 score')
+    # plt.title("f1 score at different K values ")
+    # plt.show()
 
 def baseline(X,y):
     dummy = DummyClassifier(strategy='most_frequent').fit(X, y)  #train dummy
     ydummy = dummy.predict(X) #predict baseline
-
-
     return ydummy
 
-
-
-
-def roc_curves(X,y,k):     # optimal parameters given--------->>>> Needs to be checked and rewritten
-    # y = label_binarize(y, classes=[-1,0,1])
-
-    # split into train/test sets
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
-
-    # fit model
-    clf = OneVsRestClassifier(KNeighborsClassifier(n_neighbors=k, weights='uniform'))
-    clf.fit(X_train, y_train)
-    pred = clf.predict(X_test)
-    pred_prob = clf.predict_proba(X_test)
-
-    # roc curve for classes
-    fpr = {}
-    tpr = {}
-    thresh ={}
-
-    n_class = 3
-
-    for i in range(n_class):    
-        fpr[i], tpr[i], thresh[i] = roc_curve(y_test, pred_prob[:,i], pos_label=i)
-        
-    # plotting    
-    plt.plot(fpr[0], tpr[0], linestyle='--',color='orange', label='Class 0 vs Rest')
-    plt.plot(fpr[1], tpr[1], linestyle='--',color='green', label='Class 1 vs Rest')
-    plt.plot(fpr[2], tpr[2], linestyle='--',color='blue', label='Class 2 vs Rest')
-    plt.title('Multiclass ROC curve')
-    plt.xlabel('False Positive Rate')
-    plt.ylabel('True Positive rate')
-    plt.legend(loc='best')
+def cf_matrix():
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size= 0.2)
+    knn = KNeighborsClassifier(n_neighbors=9)
+    knn.fit(X_train, y_train)
+    y_pred = knn.predict(X_test)
+    fig, ax = plt.subplots(figsize=(10, 6))
+    ax.set_title('Confusion Matrix')
+    plot_confusion_matrix(knn, X_test, y_test, ax = ax)
+    target_names = ["Classical", "Hip-Hop", "Rock"]
+    print(classification_report(y_test, y_pred, target_names=target_names))
     plt.show()
+
+def compare_train_test():
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size= 0.2, random_state=3)
+    model = KNeighborsClassifier(n_neighbors=9)
+    model.fit(X_train, y_train)
+    preds = model.predict(X_train)
+    print("TRAIN\n")
+    print(classification_report(y_train, preds))
+    print(confusion_matrix(y_train,preds))
     
+    preds = model.predict(X_test)
+    print("TEST")
+    print(classification_report(y_test, preds))
+    print(confusion_matrix(y_test,preds))
 
-    # #make models
-    # model_knn = KNeighborsClassifier(n_neighbors=k, weights='uniform')
-    # model_dummy = DummyClassifier(strategy="most_frequent").fit(X, y)
-    # model_random = DummyClassifier(strategy="uniform").fit(X, y)
 
-    # #train models
-    # model_knn.fit(X, y)    #doesn't need Xpoly 
+def plot_multiclass_roc(n_classes, figsize=(17, 6)):
+    clf = KNeighborsClassifier(n_neighbors=9)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size= 0.2, random_state=3)
+    clf.fit(X_train, y_train)
+    y_score = clf.predict_proba(X_test)
 
-    # #Split data for training and test
-    # X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+    # structures
+    fpr = dict()
+    tpr = dict()
+    roc_auc = dict()
 
-    # #plot kNN classifier
-    # model_knn.fit(X_train, y_train)
-    # y_pred = model_knn.predict_proba(X_test)[::, 1]  #predicted probability of 1 and -1
-    # fpr, tpr, _ = roc_curve(y_test, y_pred)         #for plotting
-    # plt.plot(fpr, tpr, label="kNN Classifier")
+    # calculate dummies once
+    y_test_dummies = pd.get_dummies(y_test, drop_first=False).values
+    for i in range(len(n_classes)):
+        fpr[i], tpr[i], _ = roc_curve(y_test_dummies[:, i], y_score[:, i])
+        roc_auc[i] = auc(fpr[i], tpr[i])
 
-    # #plot dummy baseline
-    # model_dummy.fit(X_train, y_train)
-    # y_pred = model_dummy.predict_proba(X_test)[::, 1]
-    # fpr, tpr, _ = roc_curve(y_test, y_pred)
-    # plt.plot(fpr, tpr, label="Baseline: Most Frequent")
+    # roc for each class
+    fig, ax = plt.subplots(figsize=figsize)
+    ax.plot([0, 1], [0, 1], 'k--')
+    ax.set_xlim([0.0, 1.0])
+    ax.set_ylim([0.0, 1.05])
+    ax.set_xlabel('False Positive Rate')
+    ax.set_ylabel('True Positive Rate')
+    ax.set_title('ROC Curves')
+    for i in range(len(n_classes)):
+        ax.plot(fpr[i], tpr[i], label='ROC curve (area = %0.2f) for label %s' % (roc_auc[i], n_classes[i]))
+    ax.legend(loc="best")
+    ax.grid(alpha=.4)
+    sns.despine()
+    plt.show()
 
-    # #plot dummy baseline -- random
-    # model_random.fit(X_train, y_train)
-    # y_pred = model_random.predict_proba(X_test)[::,1]
-    # fpr, tpr, _ = roc_curve(y_test, y_pred)
-    # plt.plot(fpr, tpr, label="Baseline: Random", ls="--")
 
-    # #plot labels
-    # plt.xlabel("False Positive Rate")
-    # plt.ylabel("True Positive rate")
-    # plt.legend()
-    # plt.show()
+with open("data/train_shuffled_all.csv", "r") as f:
+    reader = csv.reader(f)
+    columns = next(reader)
 
-if __name__ == "__main__":
-    main()
+exclude = ["analysis_url", "id", "track_href", "type", "uri", "duration_ms", "tempo", "time_signature", "mode", "liveness", "key"]
+#exclude = ["analysis_url", "id", "track_href", "type", "uri"]
+columns_overfit = [e for e in columns if e not in exclude]
+include = ["acousticness", "energy", "instrumentalness", "loudness", "valence", "danceability", "genre"]
+
+data = pd.read_csv("data/train_shuffled_all.csv", usecols=include)
+print(data["genre"].value_counts())
+# transform categorical target variable to int
+le = LabelEncoder()
+le.fit(data.genre)
+data["genre"] = le.transform(data.genre)
+# ["hiphop", "rock", "classical"] = [1, 2, 0]
+X = data.iloc[:,data.columns != "genre"]  # independent feature columns
+y = data.iloc[:,-1]    # target column i.e genre
+
+scaler = StandardScaler()
+scaled_data = scaler.fit_transform(X)
+
+scaled_df = pd.DataFrame(X, columns=X.columns)
+X = scaled_df.iloc[:,data.columns != "genre"]  # independent feature columns
+
+# cross val to find k -number of neighbours
+# find_k(X, y)
+
+# plot_multiclass_roc(n_classes=["classical", "hiphop", "rock"], figsize=(16, 10))
+# cf_matrix()
+# compare_train_test()
+
+
