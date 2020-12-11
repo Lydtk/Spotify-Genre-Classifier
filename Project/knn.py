@@ -46,7 +46,7 @@ def find_k(X,y):
     # plt.show()
 
 def baseline(X,y):
-    dummy = DummyClassifier(strategy='most_frequent').fit(X, y)  #train dummy
+    dummy = DummyClassifier(strategy='uniform').fit(X, y)  #train dummy
     ydummy = dummy.predict(X) #predict baseline
     return ydummy
 
