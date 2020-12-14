@@ -27,10 +27,14 @@ def cross_val_C():
             tmp.append(f1_score(y_test, y_pred, average="micro"))
     
         scores.append(np.mean(tmp))
-    plt.plot(C_range, scores)
-    plt.title("F1 Scores vs. C")
-    plt.xlabel("C_i"); plt.ylabel("F1 score")
+    plt.figure(figsize=(10,6))
+    plt.plot(C_range,scores,color = 'blue',linestyle='dashed', 
+            marker='o',markerfacecolor='red', markersize=10)
+    plt.title('F1 vs. C Value')
+    plt.xlabel('C')
+    plt.ylabel('F1')
     plt.show()
+    print("Maximum F1:-",max(C_range),"at C =",C_range.index(max(C_range)))
 
 def cross_val_q():
     kf = KFold(n_splits=5)
@@ -109,14 +113,8 @@ data = pd.read_csv("data/preprocessed.csv")
 X = data.iloc[:,data.columns != "genre"]  # independent feature columns
 y = data.iloc[:,-1]    # target column i.e genre
 
-scaler = StandardScaler()
-scaled_data = scaler.fit_transform(X)
-
-scaled_df = pd.DataFrame(X, columns=X.columns)
-X = scaled_df.iloc[:,data.columns != "genre"]  # independent feature columns
-
-plot_multiclass_roc(n_classes=["classical", "hiphop", "rock"], figsize=(16, 10))
-cf_matrix()
+# plot_multiclass_roc(n_classes=["classical", "hiphop", "rock"], figsize=(16, 10))
+# cf_matrix()
 cross_val_C()
 #cross_val_q()
 

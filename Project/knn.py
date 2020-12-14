@@ -16,27 +16,41 @@ from sklearn.utils.validation import check_random_state
 def find_k(X,y):
     kf = KFold(n_splits=5)
     f1Scores = []
-    k_range = list(range(1, 31))     #for cross-val
-    # k_range = [9]                        #after choosing best k
+    k_range = list(range(1, 50))     #for cross-val
 
-    # for k in k_range:
-    #     model =  KNeighborsClassifier(n_neighbors = k) #passing in different number of neighbours
-    #     temp = []
-    #     for train, test in kf.split(X):       #different combinations of splitting test/train according to k folds
-    #         model.fit(X[train], y[train])
-    #         ypred = model.predict(X[test])     #predicted y according to model
-    #         temp.append(f1_score(y[test], ypred, average='micro'))
+    for k in k_range:
+        model =  KNeighborsClassifier(n_neighbors = k) #passing in different number of neighbours
+        temp = []
+        for train_idx, test_idx in kf.split(X):       #different combinations of splitting test/train according to k folds
+            x_train, x_test = X.iloc[train_idx], X.iloc[test_idx]
+            y_test = y[test_idx]
+            y_train = y[train_idx]
+            model.fit(x_train, y_train)
+            ypred = model.predict(x_test)     #predicted y according to model
+            temp.append(f1_score(y_test, ypred, average='micro'))
 
-    #     f1Scores.append(np.array(temp).mean())  
+        f1Scores.append(np.array(temp).mean())  
 
-    knn = KNeighborsClassifier()
-    param_grid = dict(n_neighbors=k_range)
-    param_grid["weights"] = ["uniform", "distance"]
-    grid = GridSearchCV(knn, param_grid, cv=10, scoring='accuracy')
-    grid.fit(X, y)
+    plt.figure(figsize=(10,6))
+    plt.plot(k_range,f1Scores,color = 'blue',linestyle='dashed', 
+            marker='o',markerfacecolor='red', markersize=10)
+    plt.title('F1 vs. K Value')
+    plt.xlabel('K')
+    plt.ylabel('F1')
+    plt.show()
+    print("Maximum F1:-",max(k_range),"at K =",k_range.index(max(k_range)))
+    # knn = KNeighborsClassifier()
+    # param_grid = dict(n_neighbors=k_range)
+    # param_grid["weights"] = ["uniform", "distance"]
+    # grid_search_m = GridSearchCV(knn, param_grid, cv=10, scoring='f1_micro', return_train_score=True)
+    # grid_search_m.fit(X, y)
     # Dictionary containing the parameters (k) used to generate that score
-    print(grid.best_params_)
-    print(grid.best_estimator_)
+    # print(grid_search_m.cv_results_.keys())
+    # print(grid_search_m.cv_results_["mean_train_score"].shape)  # n_estimators: 11 values, max_depth: 4 values. Thus shape, 11*4=44
+    # print(grid_search_m.cv_results_["mean_test_score"].shape)
+
+    # print(grid_search_m.cv_results_["mean_train_score"])
+    # print(grid_search_m.cv_results_["mean_test_score"])
     # print("Max Score",max(f1Scores))       # finding highest f1-best precision
     # plt.plot(k_range, f1Scores, linewidth=2)   #score bar
     # plt.xlabel('Number of Neighbours')
@@ -118,8 +132,8 @@ y = data.iloc[:,-1]    # target column i.e genre
 # cross val to find k -number of neighbours
 find_k(X, y)
 
-plot_multiclass_roc(n_classes=["classical", "hiphop", "rock"], figsize=(16, 10))
-cf_matrix()
-compare_train_test()
+# plot_multiclass_roc(n_classes=["classical", "hiphop", "rock"], figsize=(16, 10))
+# cf_matrix()
+# compare_train_test()
 
 
