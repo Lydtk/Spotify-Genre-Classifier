@@ -9,7 +9,6 @@ from sklearn.metrics import f1_score, accuracy_score
 from sklearn.metrics import classification_report
 from sklearn.metrics import confusion_matrix, plot_confusion_matrix
 from sklearn.metrics import roc_curve, auc
-from sklearn.preprocessing import LabelEncoder, StandardScaler
 import csv
 
 from sklearn.utils.validation import check_random_state
@@ -109,30 +108,12 @@ def plot_multiclass_roc(n_classes, figsize=(17, 6)):
     sns.despine()
     plt.show()
 
-with open("data/train_shuffled_all.csv", "r") as f:
-    reader = csv.reader(f)
-    columns = next(reader)
+data = pd.read_csv("data/preprocessed.csv")
 
-exclude = ["analysis_url", "id", "track_href", "type", "uri", "duration_ms", "tempo", "time_signature", "mode", "liveness", "key"]
-#exclude = ["analysis_url", "id", "track_href", "type", "uri"]
-columns_overfit = [e for e in columns if e not in exclude]
-include = ["acousticness", "energy", "instrumentalness", "loudness", "valence", "danceability", "genre"]
 
-data = pd.read_csv("data/train_shuffled_all.csv", usecols=include)
-print(data["genre"].value_counts())
-# transform categorical target variable to int
-le = LabelEncoder()
-le.fit(data.genre)
-data["genre"] = le.transform(data.genre)
 # ["hiphop", "rock", "classical"] = [1, 2, 0]
 X = data.iloc[:,data.columns != "genre"]  # independent feature columns
 y = data.iloc[:,-1]    # target column i.e genre
-
-scaler = StandardScaler()
-scaled_data = scaler.fit_transform(X)
-
-scaled_df = pd.DataFrame(X, columns=X.columns)
-X = scaled_df.iloc[:,data.columns != "genre"]  # independent feature columns
 
 # cross val to find k -number of neighbours
 find_k(X, y)

@@ -2,20 +2,19 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-from sklearn import model_selection
+from sklearn.model_selection import KFold, train_test_split
 from sklearn import linear_model
 from sklearn import metrics
 from sklearn.dummy import DummyClassifier
 import csv
-from sklearn.preprocessing import PolynomialFeatures, label_binarize
-from sklearn.preprocessing import LabelEncoder, StandardScaler
+from sklearn.preprocessing import PolynomialFeatures
 from sklearn.metrics import roc_curve, auc, f1_score, classification_report
 from sklearn.metrics import confusion_matrix
 
 def cross_val_C():
     C_range = [0.01, 0.1, 0.5, 1, 5, 10, 50]
     scores = []
-    kf = model_selection.KFold(n_splits=10)
+    kf = KFold(n_splits=10)
     for C in C_range:
         tmp = []
         for train_idx, test_idx in kf.split(X):
@@ -33,22 +32,8 @@ def cross_val_C():
     plt.xlabel("C_i"); plt.ylabel("F1 score")
     plt.show()
 
-def compare_train_test():
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size= 0.2, random_state=3)
-    model = KNeighborsClassifier(n_neighbors=9)
-    model.fit(X_train, y_train)
-    preds = model.predict(X_train)
-    print("TRAIN\n")
-    print(classification_report(y_train, preds))
-    print(confusion_matrix(y_train,preds))
-    
-    preds = model.predict(X_test)
-    print("TEST")
-    print(classification_report(y_test, preds))
-    print(confusion_matrix(y_test,preds))
-
 def cross_val_q():
-    kf = model_selection.KFold(n_splits=5)
+    kf = KFold(n_splits=5)
     q_range = [1,2,3,4,5,6,7,8,9,10]
     scores = []
     for q in q_range:
@@ -69,7 +54,7 @@ def cross_val_q():
     plt.show()
 
 def cf_matrix():
-    X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y, test_size= 0.2)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size= 0.2)
     lm = linear_model.LogisticRegression(multi_class='ovr', solver='lbfgs', penalty="l2", C=10)
     lm.fit(X_train, y_train)
     y_pred = lm.decision_function(X_test)
@@ -88,7 +73,7 @@ def cf_matrix():
 
 def plot_multiclass_roc(n_classes, figsize=(17, 6)):
     clf = linear_model.LogisticRegression(multi_class='ovr', solver='lbfgs', penalty="l2", C=0.4)
-    X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y, test_size= 0.2)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size= 0.2)
     clf.fit(X_train, y_train)
     y_score = clf.decision_function(X_test)
     
@@ -118,23 +103,7 @@ def plot_multiclass_roc(n_classes, figsize=(17, 6)):
     sns.despine()
     plt.show()
 
-# clean up; remove obviously irrelevant features
-with open("data/train_shuffled_all.csv", "r") as f:
-    reader = csv.reader(f)
-    columns = next(reader)
-
-exclude = ["analysis_url", "id", "track_href", "type", "uri", "duration_ms", "tempo", "time_signature", "mode", "liveness", "key"]
-#exclude = ["analysis_url", "id", "track_href", "type", "uri"]
-columns = [e for e in columns if e not in exclude]
-include = ["acousticness", "energy", "instrumentalness", "loudness", "valence", "danceability", "genre"]
-
-data = pd.read_csv("data/train_shuffled_all.csv", usecols=include)
-print(data["genre"].value_counts())
-# transform categorical target variable to int
-le = LabelEncoder()
-le.fit(data.genre)
-data["genre"] = le.transform(data.genre)
-#print(data.genre)
+data = pd.read_csv("data/preprocessed.csv")
 # ["hiphop", "rock", "classical"] = [1, 2, 0]
 
 X = data.iloc[:,data.columns != "genre"]  # independent feature columns
@@ -146,8 +115,8 @@ scaled_data = scaler.fit_transform(X)
 scaled_df = pd.DataFrame(X, columns=X.columns)
 X = scaled_df.iloc[:,data.columns != "genre"]  # independent feature columns
 
-# plot_multiclass_roc(n_classes=["classical", "hiphop", "rock"], figsize=(16, 10))
-#cf_matrix()
+plot_multiclass_roc(n_classes=["classical", "hiphop", "rock"], figsize=(16, 10))
+cf_matrix()
 cross_val_C()
 #cross_val_q()
 
