@@ -36,27 +36,6 @@ def cross_val_C():
     plt.show()
     print("Maximum F1:-",max(C_range),"at C =",C_range.index(max(C_range)))
 
-def cross_val_q():
-    kf = KFold(n_splits=5)
-    q_range = [1,2,3,4,5,6,7,8,9,10]
-    scores = []
-    for q in q_range:
-        Xpoly = PolynomialFeatures(q).fit_transform(X)
-        model = linear_model.LogisticRegression(multi_class='ovr', dual=False, solver='lbfgs', C=0.4, penalty="l2", max_iter=10000)
-        temp = []
-        for train, test in kf.split(Xpoly):
-            y_test = y[test]
-            y_train = y[train]
-            model.fit(Xpoly[train], y_train)
-            y_pred = model.predict(Xpoly[test])
-            temp.append(f1_score(y_test, y_pred, average="micro"))
-
-        scores.append(np.mean(temp))
-    plt.plot(q_range, scores)
-    plt.title("F1 Scores vs. q")
-    plt.xlabel("q_i"); plt.ylabel("F1 score")
-    plt.show()
-
 def cf_matrix():
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size= 0.2)
     lm = linear_model.LogisticRegression(multi_class='ovr', solver='lbfgs', penalty="l2", C=10)
