@@ -55,7 +55,7 @@ def cf_matrix():
     plt.show()
 
 def plot_multiclass_roc(n_classes, figsize=(17, 6)):
-    clf = linear_model.LogisticRegression(multi_class='ovr', solver='lbfgs', penalty="l2", C=0.4)
+    clf = linear_model.LogisticRegression(multi_class='ovr', solver='lbfgs', penalty="l2", C=10)
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size= 0.2)
     clf.fit(X_train, y_train)
     y_score = clf.decision_function(X_test)
@@ -73,7 +73,7 @@ def plot_multiclass_roc(n_classes, figsize=(17, 6)):
 
     # roc for each class
     fig, ax = plt.subplots(figsize=figsize)
-    ax.plot([0, 1], [0, 1], 'k--')
+    ax.plot([0, 1], [0, 1], 'k--', label="Baseline")
     ax.set_xlim([0.0, 1.0])
     ax.set_ylim([0.0, 1.05])
     ax.set_xlabel('False Positive Rate')
@@ -94,8 +94,7 @@ y = data.iloc[:,-1]    # target column i.e genre
 
 # plot_multiclass_roc(n_classes=["classical", "hiphop", "rock"], figsize=(16, 10))
 # cf_matrix()
-cross_val_C()
-#cross_val_q()
+# cross_val_C()
 
 
 

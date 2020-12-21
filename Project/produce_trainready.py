@@ -1,8 +1,7 @@
 import pandas as pd
 import numpy as np
 import csv
-from sklearn.preprocessing import LabelEncoder, StandardScaler, MinMaxScaler
-
+from sklearn.preprocessing import LabelEncoder, MinMaxScaler
 
 # clean up; remove obviously irrelevant features
 with open("data/train_shuffled_all.csv", "r") as f:

@@ -1,11 +1,11 @@
 import numpy as np 
 import pandas as pd
 from sklearn.feature_selection import SelectKBest, f_classif, chi2
-from sklearn.preprocessing import StandardScaler, LabelEncoder
+from sklearn.preprocessing import MinMaxScaler, LabelEncoder
 import csv
 
 # clean up; remove obviously irrelevant features
-with open("data/song_data_train.csv", "r") as f:
+with open("data/train_shuffled_all.csv", "r") as f:
     reader = csv.reader(f)
     columns = next(reader)
 
@@ -19,7 +19,7 @@ le.fit(data.genre)
 data["genre"] = le.transform(data.genre)
 
 X = data.iloc[:,data.columns != "genre"]  # independent feature columns
-X_normal = StandardScaler().fit_transform(X)
+X_normal = MinMaxScaler().fit_transform(X)
 y = data.iloc[:,-1]    # target column i.e genre
 
 print("Normalised: ANOVA F value score")

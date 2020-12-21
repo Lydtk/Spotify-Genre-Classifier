@@ -40,7 +40,6 @@ def find_k(X,y):
     plt.ylabel('F1 Score')
     plt.show()
 
-
 def cf_matrix():
     #split into train test
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size= 0.2)
@@ -99,7 +98,7 @@ def plot_multiclass_roc( n_classes):
 
     # roc for each class
     fig, ax = plt.subplots(figsize=(10,6))
-    ax.plot([0, 1], [0, 1], 'k--')
+    ax.plot([0, 1], [0, 1], 'k--', label="Baseline")
     ax.set_xlim([0.0, 1.0])
     ax.set_ylim([0.0, 1.05])
     ax.set_xlabel('False Positive Rate')
@@ -133,9 +132,3 @@ plot_multiclass_roc( n_classes=["classical", "hiphop", "rock"])
 # confusion matrices + classification reports
 cf_matrix()
 
-
-# not used
-# def baseline(X,y):
-#     dummy = DummyClassifier(strategy='uniform').fit(X, y)  #train dummy
-#     ydummy = dummy.predict(X) #predict baseline
-#     return ydummy
